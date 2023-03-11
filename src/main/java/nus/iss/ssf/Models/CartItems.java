@@ -5,7 +5,7 @@ import jakarta.validation.constraints.*;
 
 public class CartItems {
 
-    @NotNull(message = "itemname is null")
+    @NotBlank(message = "itemname is null")
     @Pattern(regexp="^(apple|orange|bread|cheese|chicken|mineral_water|instant_noodles)$", message="item not found.")
     private String itemName;
 

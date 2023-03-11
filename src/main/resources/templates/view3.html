@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Successful!</title>
+</head>
+<body>
+
+    <div class="title">
+        <h2>Invoice</h2>
+    </div>
+
+        <!--model.addAttribute("invoiceId", invoiceId); 
+        model.addAttribute("shippingName", shippingAddress.getname());
+		model.addAttribute("shippingAddress", shippingAddress.getaddress());
+		model.addAttribute("total", total);
+		model.addAttribute("cart", cart); -->
+
+
+        <table>
+            <tr>
+                <td>Invoice ID:</td>
+                <td>
+                    <span data-th-text="${invoiceId}"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>Name</td>
+                <td>
+                    <span data-th-text="${shippingName}"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>Address</td>
+                <td>
+                    <span data-th-text="${shippingAddress}"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>Total</td>
+                <td>
+                    <span data-th-text="${total}"></span>
+                </td>
+            </tr>
+        </table>
+<button type="button" onclick="location.href='/';">Back To Home</button>
+    
+</body>
+</html>

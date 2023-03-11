@@ -1,53 +1,40 @@
 package nus.iss.ssf.Controllers;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.http.MediaType;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.RequestBody;
-import java.util.ArrayList;
-import jakarta.servlet.http.HttpSession;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.validation.BindingResult;
-
-
-
-
-import nus.iss.ssf.Models.*;
-import nus.iss.ssf.Services.*;
-import nus.iss.ssf.Repositories.*;
-
-
-import jakarta.servlet.http.HttpSession;
+import nus.iss.ssf.Models.CartItems;
+import nus.iss.ssf.Models.Quotation;
+import nus.iss.ssf.Models.ShippingAddress;
+import nus.iss.ssf.Repositories.CartRepo;
+import nus.iss.ssf.Services.QuotationService;
 
 @Controller
-@RequestMapping(path={"/","view1test.html"})
+@RequestMapping("/")
 public class ShoppingCartController {
 
 
 	@Autowired
 	CartRepo cartrepo;
 
-	// @Autowired
-	// ShoppingCartService ShoppingCartService;
+	@Autowired
+	QuotationService quotationService;
     
-    @GetMapping
+    @GetMapping("/")
 	public String getViewOne(Model model, HttpSession session) {
 		//basically your homepage
 
 		ArrayList<CartItems> cart = (ArrayList<CartItems>) session.getAttribute("cart");
-
-
-
 
 		// System.out.println(cartrepo.getShoppingcart());
 
@@ -57,11 +44,15 @@ public class ShoppingCartController {
 		return "view1test";
 	}
 	
-	@PostMapping(path={"/add"})
-	public String postViewOne(@RequestBody MultiValueMap<String, String> form, Model model, HttpSession session) {
+	@PostMapping(path="/add")
+	public String postViewOne(@Valid @ModelAttribute("cartitems") CartItems cartitems, BindingResult bresult, Model model, HttpSession session) {
 		
-		String itemName = form.getFirst("itemName");
-		Integer qty = Integer.parseInt(form.getFirst("qty"));
+		if(bresult.hasErrors()){
+            return "view1test";
+        }
+
+		String itemName = cartitems.getItemName();
+		Integer qty = cartitems.getQty();
 
 		ArrayList<CartItems> cart = (ArrayList<CartItems>) session.getAttribute("cart");
 
@@ -80,12 +71,49 @@ public class ShoppingCartController {
 
 	}
 
-	@GetMapping(path={"/shipping"})
+	@GetMapping(path="/shipping")
 	public String getShippingAddress(Model model, HttpSession session) {
 
 		ArrayList<CartItems> cart = (ArrayList<CartItems>) session.getAttribute("cart");
 
+		if (null == cart) {
+			// If cart is null, then new session
+			return "redirect:/";
+		}
+
+		quotationService.printingCart(2, cart);
+
+		session.setAttribute("cart", cart);
 		model.addAttribute("ShippingAddress", new ShippingAddress());
 		return "view2";
+	}
+
+	@PostMapping(path="/checkout")
+	public String postInvoice(@Valid @ModelAttribute("ShippingAddress") ShippingAddress shippingAddress, BindingResult bindingResult, Model model, HttpSession session) throws Exception {
+		
+		if (bindingResult.hasErrors()){
+			return "view2";
+
+		}
+
+		//get the name, address, items and its qty
+		ArrayList<CartItems> cart = (ArrayList<CartItems>) session.getAttribute("cart");
+		quotationService.printingCart(3, cart);
+		System.out.println(shippingAddress.getname() + " " + shippingAddress.getaddress());
+
+		Quotation quotation = new Quotation();
+		quotation = quotationService.getQuotations(quotationService.convertToListString(cart));
+		Float total = quotationService.calculateCart(cart, quotation);
+		String invoiceId = quotation.getQuoteId();
+	
+		model.addAttribute("invoiceId", invoiceId);
+		model.addAttribute("shippingName", shippingAddress.getname());
+		model.addAttribute("shippingAddress", shippingAddress.getaddress());
+		model.addAttribute("total", total);
+
+		session.invalidate();
+
+		return "view3";
+		// return "view3";
 	}
 }
